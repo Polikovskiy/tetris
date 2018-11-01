@@ -46,7 +46,6 @@ BaseApp::BaseApp(int xSize, int ySize) : X_SIZE(xSize), Y_SIZE(ySize)
 	mLpWriteRegion.Right = X_SIZE + 1;
 	mLpWriteRegion.Bottom = Y_SIZE + 1;	// ïðÿìîóãîëüíèê äëÿ ÷òåíèÿ
 
-	gameOver = false;
 
 
 	for (int x = 0; x < X_SIZE + 1; x++)
@@ -92,7 +91,7 @@ void BaseApp::Run()
 
 	int deltaTime = 0;
 	
-	while (!gameOver)
+	while (1)
 	{	
 		timer.Start();
 		if (_kbhit())
@@ -104,7 +103,7 @@ void BaseApp::Run()
 
 		UpdateF((float)deltaTime / 1000.0f);
 		Render();
-		Sleep(500);
+		Sleep(1);
 
 		while (1)
 		{

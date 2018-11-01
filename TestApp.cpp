@@ -3,71 +3,51 @@
 
 TestApp::TestApp() : Parent(30, 20)
 {
-	mDirection = true;
-	mObj1XOld = mObj1X = 10;                                   //координаты фигуры
-	mObj1YOld = mObj1Y = 2;
-	mObj2X = 10;
-	mObj2Y = 12;
+	mObj1XOld = mObj1X = 7;                                             // начальные координаты фигуры
+	mObj1YOld = mObj1Y = 1;
 
-	tetromino[0].append(L"0   0   0   0   ");                  //  фигуры  4x4
-	tetromino[1].append(L"0   00  0       ");
-	tetromino[2].append(L"0   0   00      ");
-	tetromino[3].append(L" 0   0  00      ");
-	tetromino[4].append(L"0               ");
-	tetromino[5].append(L"00  00          ");
-	tetromino[6].append(L" 0  00  0       ");
-	tetromino[7].append(L"0   00   0      ");
+	tetrominoList.push_back(Tetromino(3, 2, L"101110"));                  //  фигуры тетромино   4x4
+	tetrominoList.push_back(Tetromino(4, 1, L"1111"));
+	tetrominoList.push_back(Tetromino(2, 2, L"1111"));
+	tetrominoList.push_back(Tetromino(1, 1, L"1"));
+	tetrominoList.push_back(Tetromino(3, 2, L"011110"));
+	tetrominoList.push_back(Tetromino(3, 2, L"101101"));
+	tetrominoList.push_back(Tetromino(2, 1, L"11"));
 
-	tetrominoCurent = tetromino[rand() % 8];                         // текущая
-	tetrominoNext = tetromino[rand() % 8];                           //следующая
+	tetrominoCurent = tetrominoList[rand() % tetrominoList.size()-1];       //текущая фигура
+	tetrominoNext = tetrominoList[rand() % tetrominoList.size()-1];         // следующая фигура
 
-	score = 0;
-
-	for (int i = 0; i < Y_SIZE + 1; i++) {
-		for (int j = 0; j < X_SIZE + 1; j++) {
-			if (i == 0 || i == Y_SIZE - 1 || j == 0 || j == X_SIZE - X_SIZE / 3) {           //рисуем поле
-				SetChar(j, i, L'#');
-			}
-			else {
-				SetChar(j, i, L' ');
-			}
-		}
-	}
-	
-
+	drawFrame();
 }
 
 void TestApp::KeyPressed(int btnCode)
 {
-	if (btnCode == 32) { //w
-		clearTetromino(mObj1XOld, mObj1YOld, tetrominoCurent);            // вращение
+	if (btnCode == 32) {                             // вращение
 		rotate();
 		mObj1Y--;
-	} 
-	else if (btnCode == 80) //s                                         // ускорение
-		mObj1Y+=2;
+	}
+	else if (btnCode == 80) 						       // ускорение
+		speedUp();
+
 	else if (btnCode == 75) {
-		if (isEmpty(mObj1X-1, mObj1Y-1, tetrominoCurent)) {
-			mObj1X--;
-			mObj1Y--;
-			                                                             // вправо влево
+		if (isEmpty(mObj1X-1, mObj1Y, tetrominoCurent)) {
+			mObj1X--;			                                    // вправо влево
 		}
 	}
-	else if (btnCode == 77) { //d
-		if (isEmpty(mObj1X+1, mObj1Y-1, tetrominoCurent)) {
+	else if (btnCode == 77) { 
+		if (isEmpty(mObj1X+1, mObj1Y, tetrominoCurent)) {
 			mObj1X++;
-			mObj1Y--;
 		}
 	}
 	if (mObj1X < 1)
 		mObj1X = 1;
-	else if (mObj1X >= X_SIZE)
-		mObj1X = X_SIZE - 1;
+	else if (mObj1X >= borderFieldX)
+		mObj1X = borderFieldX - 1;
 
 	if (mObj1Y < 1)
 		mObj1Y = 1;
-	else if (mObj1Y >= Y_SIZE)
-		mObj1Y = Y_SIZE - 1;
+	else if (mObj1Y >= borderFieldY)
+		mObj1Y = borderFieldY - 1;
 }
 
 void TestApp::UpdateF(float deltaTime)
@@ -77,77 +57,79 @@ void TestApp::UpdateF(float deltaTime)
 
 	drawScoreLine();
 
-	if (isEmpty(mObj1X, mObj1Y, tetrominoCurent)) {            //проверяем место
-		
+	generateNewFigureTime += deltaTime;
 
-		clearTetromino(mObj1XOld, mObj1YOld, tetrominoCurent);           //убираем прошлую итерацию
-		drawTetromino(mObj1X, mObj1Y, tetrominoCurent);                   //рисуем новую итерацию
-		drawTetromino(tetromineNextX, tetromineNextY, tetrominoNext);      //рисуем превью
-		clearLines();                                                      // проверяем и очищаем заполненные линии и очки
 
-		mObj1XOld = mObj1X;
-		mObj1YOld = mObj1Y;
+	if (generateNewFigureTime >= gameStep) {
+		if (isEmpty(mObj1X, mObj1Y, tetrominoCurent)) {                      //проверяем место
 
-		mObj1Y++;
-	}
-	else {
-		if (isTop()) {
-			gameOver = true;
-			GameOver();                                               // рисуем надпись GAME OVER
+			generateNewFigureTime = 0;
+
+			clearTetromino(mObj1XOld, mObj1YOld, tetrominoCurent);           //убираем прошлую итерацию
+
+			drawTetromino(mObj1X, mObj1Y, tetrominoCurent);                   //рисуем новую итерацию
+
+			drawTetromino(tetromineNextX, tetromineNextY, tetrominoNext);      //рисуем превью
+
+			mObj1XOld = mObj1X;
+			mObj1YOld = mObj1Y;
+
+			mObj1Y++;
 		}
+		else {
+			if (isTop()) {
+				GameOver();                                                    // рисуем надпись GAME OVER
+			}
 
+			clearTetromino(tetromineNextX, tetromineNextY, tetrominoNext);
+			clearLines();                                                      // проверяем и очищаем заполненные линии и очки
 
-		drawTetromino(mObj1XOld, mObj1YOld, tetrominoCurent);
-		clearTetromino(tetromineNextX, tetromineNextY, tetrominoNext);
-		clearLines();
+			mObj1XOld = mObj1X = 7;
+			mObj1YOld = mObj1Y = 1;
 
-		mObj1XOld = mObj1X = 10;
-		mObj1YOld = mObj1Y = 1;
+			tetrominoCurent = tetrominoNext;
+			tetrominoNext = tetrominoList[rand() % 7];
 
-		tetrominoCurent = tetrominoNext;
-		tetrominoNext = tetromino[rand() % 8];
+			gameStep = 0.5;
 
-	}
-}
-
-void TestApp::rotate() {                                                     // вращение фигуры
-	wstring tetrominoRotate;
-	for (int i = 1; i <= 4; i++) {
-		for (int j = 1; j <= 4; j++) {
-			int last = 3;
-			tetrominoRotate = tetrominoRotate + tetrominoCurent[4*j-i];
 		}
 	}
-	tetrominoCurent = tetrominoRotate;
+
+	
 }
 
-void TestApp::clearTetromino(int x, int y, wstring tetromino) {               //очистка места фигуры
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			if (tetromino[4 * i + j] == '0') {
+void TestApp::speedUp() {                                                   
+	gameStep = 0.1;
+}
+
+void TestApp::clearTetromino(int x, int y, Tetromino tetromino) {               //очистка места фигуры
+	for (int i = 0; i < tetromino.row; i++) {
+		for (int j = 0; j < tetromino.col; j++) {
+			if (tetromino.tetrominoShape[tetromino.col * i + j] == '1') {
 				SetChar(x + j, y + i, L' ');
 			}
 		}
 	}
 }
 
-void TestApp::drawTetromino(int x, int y, wstring tetromino) {                  //заполнение по шаблону
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			if (tetromino[4 * i + j] == '0') {
+void TestApp::drawTetromino(int x, int y, Tetromino tetromino) {                  //отрисовка фигуры по шаблону
+	for (int i = 0; i < tetromino.row; i++) {
+		for (int j = 0; j < tetromino.col; j++) {
+			if (tetromino.tetrominoShape[tetromino.col * i + j] == '1') {
 				SetChar(x + j, y + i, L'O');
 			}
 		}
 	}
 }
 
-bool TestApp::isEmpty(int newX, int newY, wstring tetromino) {               // проверка на столкновение
+bool TestApp::isEmpty(int newX, int newY, Tetromino tetromino) {               // проверка на столкновение
 	clearTetromino(mObj1XOld, mObj1YOld, tetrominoCurent);
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
+	for (int i = 0; i < tetromino.row; i++) {
+		for (int j = 0; j < tetromino.col; j++) {
 			wchar_t curent = GetChar(newX + j, newY + i);
-			if (tetromino[4 * i + j] == '0' ) {
+			if (tetromino.tetrominoShape[tetromino.col * i + j] == '1' ) {
 				if ( GetChar(newX + j, newY + i) == 'O'|| GetChar(newX + j, newY + i) == '#') {
+					drawTetromino(mObj1XOld, mObj1YOld, tetrominoCurent);
 					return false;
 				}
 			}
@@ -157,35 +139,37 @@ bool TestApp::isEmpty(int newX, int newY, wstring tetromino) {               // 
 	return true;
 }
 
-void TestApp::clearLines() {                                                                      // проверка заполненных линий
-	CHAR_INFO* mChiBufferNew = (CHAR_INFO*)malloc((X_SIZE + 1)*(Y_SIZE + 1) * sizeof(CHAR_INFO));
-	for (int i = Y_SIZE; i > 0; i--) {
-		for (int j = X_SIZE - X_SIZE / 3-1; j > 0; j--) {
+void TestApp::clearLines() {                                                   // удаление заполненных линий
+	for (int i = borderFieldY; i > 0; i--) {
+		for (int j = borderFieldX-1; j > 0; j--) {
 			if (GetChar(j, i) != 'O') {
 				break;
 			}
 			if (j == 1) {
 				score += 100;
-				ShiftLine();
+				ShiftLine(i);
+				i++;
 			}
 		}
 	}
 }
 
-void TestApp::ShiftLine() {                                                      // сдвиг 
-	for (int i = Y_SIZE - 2; i > 0; i--) {
-		for (int j = 1; j < X_SIZE - X_SIZE / 3; j++) {
+void TestApp::ShiftLine(int line) {                                                      // сдвиг 
+	for (int i = line; i > 0; i--) {
+		for (int j = 1; j < borderFieldX; j++) {
 			if (i == 1) {
 				SetChar(j, i, ' ');
 			}
 			else {
 				wchar_t curent = GetChar(j, i - 1);
 				SetChar(j, i, curent);
+				
 			}
 			
 		}
 	}
 }
+
 void TestApp::drawScoreLine() {                                                 // вывод score
 	string scoreLine = "score: ";
 	string scoreString = to_string(score);
@@ -197,19 +181,40 @@ void TestApp::drawScoreLine() {                                                 
 	}	
 }
 
-void TestApp::GameOver() {                                                    // вывод Game over
-	string GameOverString = " G A M E   O V E R ! ! ! ";
-	int count = GameOverString.size();
-	for (int i = 0; i < count; i++) {
-		wchar_t curent = GameOverString[i];
-		SetChar(5 + i, Y_SIZE/2, curent);
-
-	}
+void TestApp::GameOver() {                                                    // выход Game over
+	system("cls");
+	std::cout << "Game over!\nYour score: " << score << endl;
+	cin.ignore();
+	exit(0);
 }
-bool TestApp::isTop() {
-	if (mObj1Y == 1) {
+
+bool TestApp::isTop() {                                                  //заполнилось поле
+	if (mObj1Y == 2) {
 		return true;
 	}
 	return false;
+}
+
+void TestApp::rotate() {												// вращение фигуры
+	Tetromino tetrominoRotate = tetrominoCurent.rotateTetromino();
+
+	if (isEmpty(mObj1X, mObj1Y, tetrominoRotate)) {
+		clearTetromino(mObj1XOld, mObj1YOld, tetrominoCurent);
+		tetrominoCurent = tetrominoRotate;
+	}
+}
+
+void TestApp::drawFrame() {
+	for (int i = 0; i < Y_SIZE + 1; i++) {
+		for (int j = 0; j < X_SIZE + 1; j++) {
+			if (i == 0 || i == borderFieldY || j == 0 || j == borderFieldX) {           //рисуем поле
+				SetChar(j, i, L'#');
+			}
+			else {
+				SetChar(j, i, L' ');
+			}
+		}
+	}
+
 }
 

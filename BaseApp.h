@@ -21,7 +21,6 @@ private:
 
 public:
 
-	bool gameOver;
 	//ðàçìåðû îáëàñòè âûâîäà ïî ãîðèçîíòàëè è âåðòèêàëè â ñèìâîëàõ
 	const int X_SIZE;
 	const int Y_SIZE;

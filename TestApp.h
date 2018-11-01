@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseApp.h"
 #include <iostream>
+#include "Tetromino.cpp"
 
 class TestApp : public BaseApp
 {
@@ -12,34 +13,34 @@ private:
 	int mObj1X;
 	int mObj1Y;
 
-	int mObj2X;
-	int mObj2Y;
+	int borderFieldX = 15;
+	int borderFieldY = Y_SIZE - 1;
 
-	wstring tetromino[7];
-	wstring tetrominoCurent;
-	wstring tetrominoNext;
-
-	int score;
+	int score = 0;
 	
-	float generateNewFigureTime_ = 1000.0f;
-	float fromLastGenerateNewFigureTime_ = 0.0f;
+	float generateNewFigureTime = 0;
 
-	float moveSpeed_ = 100.0f; //pix in sec
+	float gameStep = 0.5; 
 
-	bool mDirection;
+	Tetromino tetrominoCurent;
+	Tetromino tetrominoNext;
+
+	vector <Tetromino> tetrominoList;
 
 public:
 	TestApp();
 	virtual void KeyPressed(int btnCode);
 	virtual void UpdateF(float deltaTime);
+	void drawFrame();
 	void rotate();
-	void clearTetromino(int x, int y, wstring tetromino);
-	void drawTetromino(int x, int y, wstring tetromino);
+	void clearTetromino(int x, int y, Tetromino tetromino);
+	void drawTetromino(int x, int y, Tetromino tetromino);
 	void clearLines();
-	void ShiftLine();
-	bool isEmpty(int newX, int newY, wstring tetromino);
+	void ShiftLine(int line);
 	void drawScoreLine();
 	void GameOver();
+	void speedUp();
+	bool isEmpty(int newX, int newY, Tetromino tetromino);
 	bool isTop();
 };
 
